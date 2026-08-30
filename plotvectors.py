@@ -351,6 +351,58 @@ def plotvectors2D(*args):
     fig.update_layout(legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1, itemdoubleclick ="toggle"),title_font=dict(size=30, color='rgb(1,21,51)'),showlegend=True,width=500, height=480)
     fig.show()
 
+
+def parse_vector3d_args(V):
+    """
+    Parses vector arguments and returns (tail, head, has_tail)
+    tail: (x, y, z)
+    head: (x, y, z)
+    has_tail: boolean
+    """
+    if type(V) != list and type(V) != tuple:
+        a = np.array(V).astype(np.float64).tolist()[0][0]
+        b = np.array(V).astype(np.float64).tolist()[1][0]
+        c = np.array(V).astype(np.float64).tolist()[2][0]
+        return (0, 0, 0), (a, b, c), False
+
+    if type(V[0]) == int or type(V[0]) == float:
+        if type(V[1]) == int or type(V[1]) == float:
+            return (0, 0, 0), (V[0], V[1], V[2]), False
+        elif type(V[1]) == list:
+            magni = V[0]
+            dir_x, dir_y, dir_z = V[1][0], V[1][1], V[1][2]
+            return (0, 0, 0), (magni * dir_x, magni * dir_y, magni * dir_z), False
+        else:
+            magni = V[0]
+            dir_x = np.array(V[1]).astype(np.float64)[0][0]
+            dir_y = np.array(V[1]).astype(np.float64)[1][0]
+            dir_z = np.array(V[1]).astype(np.float64)[2][0]
+            return (0, 0, 0), (magni * dir_x, magni * dir_y, magni * dir_z), False
+
+    if type(V[0]) == tuple:
+        tx, ty, tz = V[0][0], V[0][1], V[0][2]
+        if len(V) == 2:
+            if type(V[1]) == tuple:
+                return (tx, ty, tz), (V[1][0], V[1][1], V[1][2]), True
+            elif type(V[1]) == list:
+                return (tx, ty, tz), (tx + V[1][0], ty + V[1][1], tz + V[1][2]), True
+            else:
+                a = np.array(V[1]).astype(np.float64).tolist()[0][0]
+                b = np.array(V[1]).astype(np.float64).tolist()[1][0]
+                c = np.array(V[1]).astype(np.float64).tolist()[2][0]
+                return (tx, ty, tz), (tx + a, ty + b, tz + c), True
+        else:
+            magni = V[1]
+            if type(V[2]) == list:
+                dir_x, dir_y, dir_z = V[2][0], V[2][1], V[2][2]
+            else:
+                dir_x = np.array(V[2]).astype(np.float64)[0][0]
+                dir_y = np.array(V[2]).astype(np.float64)[1][0]
+                dir_z = np.array(V[2]).astype(np.float64)[2][0]
+            return (tx, ty, tz), (tx + magni * dir_x, ty + magni * dir_y, tz + magni * dir_z), True
+
+    return (0, 0, 0), (0, 0, 0), False
+
 def plotvectors3D(*args):
     
     '''Función elaborada con el módulo Plotly y Numpy, permite visualizar multiples vectores en el espacio tridimensional, que pueden tener
@@ -363,487 +415,76 @@ def plotvectors3D(*args):
     y = [0]
     z = [0.3,-0.3]
 
-
     for V in args:
+        tail, head, has_tail = parse_vector3d_args(V)
+        if has_tail:
+            x.extend([tail[0], head[0]])
+            y.extend([tail[1], head[1]])
+            z.extend([tail[2], head[2]])
+        else:
+            x.append(head[0])
+            y.append(head[1])
+            z.append(head[2])
 
-        if type(V[0]) == int or type(V[0]) == float :
-
-            if type(V[1]) == int or type(V[1]) == float :
-
-                x.append(V[0])
-                y.append(V[1])
-                z.append(V[2])
-
-            if type(V[1]) == list :
-                
-                magni = V[0]
-
-                dir_x = V[1][0]
-                dir_y = V[1][1]
-                dir_z = V[1][2]
-
-                v = [magni *dir_x,magni*dir_y,magni*dir_z]
-
-                x.append(v[0])
-                y.append(v[1])
-                z.append(v[2])
-            
-            if type(V[1]) != list and type(V[1]) != int and type(V[1]) != float :
-
-                magni = V[0]
-
-                dir_x = np.array(V[1]).astype(np.float64)[0][0]
-                dir_y = np.array(V[1]).astype(np.float64)[1][0]
-                dir_z = np.array(V[1]).astype(np.float64)[2][0]
-
-                v = [magni *dir_x,magni*dir_y,magni*dir_z]
-
-                x.append(v[0])
-                y.append(v[1])
-                z.append(v[2])
-
-
-        if  type(V[0]) == tuple:
-
-
-            if len(V)==2:
-
-                if type(V[1]) == tuple:
-                    
-                    x.append(V[0][0])
-                    x.append(V[1][0])
-
-                    y.append(V[0][1])
-                    y.append(V[1][1])
-
-                    z.append(V[0][2])
-                    z.append(V[1][2])
-
-                if type(V[1]) == list:
-
-                    x.append(V[0][0])
-                    x.append(V[0][0]+V[1][0])
-
-                    y.append(V[0][1])
-                    y.append(V[0][1]+V[1][1])
-
-                    z.append(V[0][2])
-                    z.append(V[0][2]+V[1][2])
-
-                if  type(V[1]) != list and type(V[1]) != tuple:
-
-                    a = np.array(V[1]).astype(np.float64).tolist()[0][0]
-                    b = np.array(V[1]).astype(np.float64).tolist()[1][0]
-                    c = np.array(V[1]).astype(np.float64).tolist()[2][0]
-
-                    x.append(V[0][0])
-                    x.append(V[0][0]+a)
-
-                    y.append(V[0][1])
-                    y.append(V[0][1]+b)
-
-                    z.append(V[0][2])
-                    z.append(V[0][2]+c)
-
-            else:
-
-                if  type(V[2]) == list:
-                    
-                    p_x = V[0][0]
-                    p_y = V[0][1]
-                    p_z = V[0][2]
-
-
-                    magni = V[1]
-
-                    dir_x = V[2][0]
-                    dir_y = V[2][1]
-                    dir_z = V[2][2]
-
-                    v = [magni *dir_x+p_x ,magni*dir_y+p_y,magni*dir_z+p_z]
-
-                    x.append(p_x)
-                    y.append(p_y)
-                    z.append(p_z)
-
-
-                    x.append(v[0])
-                    y.append(v[1])
-                    z.append(v[2])
-
-                if  type(V[2]) != list and  type(V[2]) != tuple:
-
-                    p_x = V[0][0]
-                    p_y = V[0][1]
-                    p_z = V[0][2]
-
-
-                    magni = V[1]
-
-                    dir_x = np.array(V[2]).astype(np.float64)[0][0]
-                    dir_y = np.array(V[2]).astype(np.float64)[1][0]
-                    dir_z = np.array(V[2]).astype(np.float64)[2][0]
-
-                    v = [magni *dir_x+p_x ,magni*dir_y+p_y,magni*dir_z+p_z]
-
-                    x.append(p_x)
-                    y.append(p_y)
-                    z.append(p_z)
-
-
-                    x.append(v[0])
-                    y.append(v[1])
-                    z.append(v[2])
-
-            
-           
-        if type(V) != list:
-
-            a = np.array(V).astype(np.float64).tolist()[0][0]
-            b = np.array(V).astype(np.float64).tolist()[1][0]
-            c = np.array(V).astype(np.float64).tolist()[2][0]
-
-            x.append(a)
-            y.append(b)
-            z.append(c)
-
-                    
-             
     escala = (max(x)+max(y)+max(z))/30
 
-    
-    for V in args:
+    for i, V in enumerate(args):
+        tail, head, has_tail = parse_vector3d_args(V)
 
-        if type(V[0]) == int or type(V[0]) == float :
+        tx, ty, tz = tail
+        hx, hy, hz = head
 
-            if type(V[1]) == int or type(V[1]) == float:
-                
-                x.append(V[0])
-                y.append(V[1])
-                z.append(V[2])
-                color = randomRgbaColor()
-                vector = go.Scatter3d( 
-                x = [0,V[0]],
-                y = [0,V[1]],
-                z = [0,V[2]],
+        color = randomRgbaColor()
+
+        if has_tail:
+            nombre = "Tail"+ "=" + "(" + str(tx)  + "," + str(ty) +"," +str(tz) + ")" + "\n" + "Head"+ "=" + "(" + str(hx)  + "," + str(hy) +"," +str(hz) + ")"
+            vector = go.Scatter3d(
+                x = [tx, hx],
+                y = [ty, hy],
+                z = [tz, hz],
+                hoverinfo = "name + text",
+                hovertext = nombre,
                 marker = dict( size = 1,color= color),
-                line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
+                line = dict( color= color, width = 7),name="vector "+ str(i+1))
             
-                paleta = [[0, color],[1, color]]
-
-                cono = go.Cone(x=[V[0]], y=[V[1]], z=[V[2]], u=[V[0]], v=[V[1]], w=[V[2]],sizemode="absolute",sizeref=escala,anchor="cm",
+            paleta = [[0, color],[1, color]]
+            cono = go.Cone(
+                x=[hx-0.063*(hx-tx)],
+                y=[hy-0.063*(hy-ty)],
+                z=[hz-0.063*(hz-tz)],
+                u=[0.5*(hx-tx)],
+                v=[0.5*(hy-ty)],
+                w=[0.5*(hz-tz)],
+                sizemode="absolute",sizeref=escala,anchor="cm",
+                showscale=False,
+                colorscale=paleta,
+                hoverinfo = "skip",
+                colorbar=dict(thickness=20, ticklen=4),
+                name="vector "+ str(i+1))
+        else:
+            vector = go.Scatter3d(
+                x = [0,hx],
+                y = [0,hy],
+                z = [0,hz],
+                marker = dict( size = 1,color= color),
+                line = dict( color= color, width = 7),name="vector "+ str(i+1))
+            
+            paleta = [[0, color],[1, color]]
+            cono = go.Cone(
+                x=[hx],
+                y=[hy],
+                z=[hz],
+                u=[hx],
+                v=[hy],
+                w=[hz],
+                sizemode="absolute",sizeref=escala,anchor="cm",
                 showscale=False,
                 colorscale=paleta,
                 colorbar=dict(thickness=20, ticklen=4),
-                name="vector "+ str(args.index(V)+1))
-            
-                data += [vector,cono]
-                layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
+                name="vector "+ str(i+1))
 
-            if type(V[1]) == list :
-
-                magni = V[0]
-
-                dir_x = V[1][0]
-                dir_y = V[1][1]
-                dir_z = V[1][2]
-
-                v = [magni *dir_x,magni*dir_y,magni*dir_z]
-
-                color = randomRgbaColor()
-                vector = go.Scatter3d( 
-                x = [0,v[0]],
-                y = [0,v[1]],
-                z = [0,v[2]],
-                marker = dict( size = 1,color= color),
-                line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                
-                paleta = [[0, color],[1, color]]
-
-                cono = go.Cone(x=[v[0]], y=[v[1]], z=[v[2]], u=[v[0]], v=[v[1]], w=[v[2]],sizemode="absolute",sizeref= escala,anchor="cm",
-                    showscale=False,
-                    colorscale=paleta,
-                    colorbar=dict(thickness=20, ticklen=4),
-                    name="vector "+ str(args.index(V)+1))
-                
-                data += [vector,cono]
-                layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-            
-            if type(V[1]) != list and type(V[1]) != int and type(V[1]) != float :
-
-                magni = V[0]
-
-                dir_x = np.array(V[1]).astype(np.float64)[0][0]
-                dir_y = np.array(V[1]).astype(np.float64)[1][0]
-                dir_z = np.array(V[1]).astype(np.float64)[2][0]
-
-                v = [magni *dir_x,magni*dir_y,magni*dir_z]
-
-                color = randomRgbaColor()
-                vector = go.Scatter3d( 
-                x = [0,v[0]],
-                y = [0,v[1]],
-                z = [0,v[2]],
-                marker = dict( size = 1,color= color),
-                line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                
-                paleta = [[0, color],[1, color]]
-
-                cono = go.Cone(x=[v[0]], y=[v[1]], z=[v[2]], u=[v[0]], v=[v[1]], w=[v[2]],sizemode="absolute",sizeref= escala,anchor="cm",
-                    showscale=False,
-                    colorscale=paleta,
-                    colorbar=dict(thickness=20, ticklen=4),
-                    name="vector "+ str(args.index(V)+1))
-                
-                data += [vector,cono]
-                layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-                
-        if  type(V[0]) == tuple:
-
-            if  len(V)==2:
-
-                if  type(V[1]) == tuple:
-                    
-                    x.append(V[0][0])
-                    x.append(V[1][0])
-
-                    y.append(V[0][1])
-                    y.append(V[1][1])
-
-                    z.append(V[0][2])
-                    z.append(V[1][2])
-
-                    nombre = "Tail"+ "=" + "(" + str(V[0][0])  + "," + str(V[0][1]) +"," +str(V[0][2]) + ")" + "\n" + "Head"+ "=" + "(" + str(V[1][0])  + "," + str(V[1][1]) +"," +str(V[1][2]) + ")"
-
-                    color = randomRgbaColor()
-                    vector = go.Scatter3d( 
-                    x = [V[0][0],V[1][0]],
-                    y = [V[0][1],V[1][1]],
-                    z = [V[0][2],V[1][2]],
-                    hoverinfo = "name + text",
-                    hovertext = nombre,
-                    marker = dict( size = 1,color= color),
-                    line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                
-                    paleta = [[0, color],[1, color]]
-
-                    cono = go.Cone(x=[V[1][0]-0.0063*(V[1][0]-V[0][0])], y=[V[1][1]-0.0063*(V[1][1]-V[0][1])], z=[V[1][2]-0.0063*(V[1][2]-V[0][2])], u=[0.5*(V[1][0]-V[0][0])], v=[0.5*(V[1][1]-V[0][1])], w=[0.5*(V[1][2]-V[0][2])],sizemode="absolute",sizeref=escala,anchor="cm",
-                    showscale=False,
-                    colorscale=paleta,
-                    hoverinfo = "skip",
-                    colorbar=dict(thickness=20, ticklen=4),
-                    name="vector "+ str(args.index(V)+1))
-                
-                    data += [vector,cono]
-                    layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-
-                if  type(V[1]) == list:
-
-                    x.append(V[0][0])
-                    x.append(V[0][0]+V[1][0])
-
-                    y.append(V[0][1])
-                    y.append(V[0][1]+V[1][1])
-
-                    z.append(V[0][2])
-                    z.append(V[0][2]+V[1][2])
-
-                    nombre = "Tail"+ "=" + "(" + str(V[0][0])  + "," + str(V[0][1]) +"," +str(V[0][2]) + ")" + "\n" + "Head"+ "=" + "(" + str(V[0][0]+V[1][0])  + "," + str(V[0][1]+V[1][1]) +"," +str(V[0][2]+V[1][2]) + ")"
-
-                    color = randomRgbaColor()
-                    vector = go.Scatter3d( 
-                    x = [V[0][0],V[0][0]+V[1][0]],
-                    y = [V[0][1],V[0][1]+V[1][1]],
-                    z = [V[0][2],V[0][2]+V[1][2]],
-                    hoverinfo = "name + text",
-                    hovertext = nombre,
-                    marker = dict( size = 1,color= color),
-                    line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                
-                    paleta = [[0, color],[1, color]]
-
-                    cono = go.Cone(x=[(V[0][0]+V[1][0])-0.063*((V[0][0]+V[1][0])-V[0][0])], y=[(V[0][1]+V[1][1])-0.063*((V[0][1]+V[1][1])-V[0][1])], z=[(V[0][2]+V[1][2])-0.063*((V[0][2]+V[1][2])-V[0][2])], u=[0.5*((V[0][0]+V[1][0])-V[0][0])], v=[0.5*((V[0][1]+V[1][1])-V[0][1])], w=[0.5*((V[0][2]+V[1][2])-V[0][2])],sizemode="absolute",sizeref=escala,anchor="cm",
-                    showscale=False,
-                    colorscale=paleta,
-                    hoverinfo = "skip",
-                    colorbar=dict(thickness=20, ticklen=4),
-                    name="vector "+ str(args.index(V)+1))
-                
-                    data += [vector,cono]
-                    layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-                
-                if  type(V[1]) != list and type(V[1]) != tuple:
-                    
-                    a = np.array(V[1]).astype(np.float64).tolist()[0][0]
-                    b = np.array(V[1]).astype(np.float64).tolist()[1][0]
-                    c = np.array(V[1]).astype(np.float64).tolist()[2][0]
-
-                    x.append(V[0][0])
-                    x.append(V[0][0]+a)
-
-                    y.append(V[0][1])
-                    y.append(V[0][1]+b)
-
-                    z.append(V[0][2])
-                    z.append(V[0][2]+c)
-
-                    nombre = "Tail"+ "=" + "(" + str(V[0][0])  + "," + str(V[0][1]) +"," +str(V[0][2]) + ")" + "\n" + "Head"+ "=" + "(" + str(V[0][0]+a)  + "," + str(V[0][1]+b) +"," +str(V[0][2]+c) + ")"
-
-                    color = randomRgbaColor()
-                    vector = go.Scatter3d( 
-                    x = [V[0][0],V[0][0]+a],
-                    y = [V[0][1],V[0][1]+b],
-                    z = [V[0][2],V[0][2]+c],
-                    hoverinfo = "name + text",
-                    hovertext = nombre,
-                    marker = dict( size = 1,color= color),
-                    line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                
-                    paleta = [[0, color],[1, color]]
-
-                    cono = go.Cone(x=[(V[0][0]+a)-0.063*((V[0][0]+a)-V[0][0])], y=[(V[0][1]+b)-0.063*((V[0][1]+b)-V[0][1])], z=[(V[0][2]+c)-0.063*((V[0][2]+c)-V[0][2])], u=[0.5*((V[0][0]+a)-V[0][0])], v=[0.5*((V[0][1]+b)-V[0][1])], w=[0.5*((V[0][2]+c)-V[0][2])],sizemode="absolute",sizeref=escala,anchor="cm",
-                    showscale=False,
-                    colorscale=paleta,
-                    hoverinfo = "skip",
-                    colorbar=dict(thickness=20, ticklen=4),
-                    name="vector "+ str(args.index(V)+1))
-                
-                    data += [vector,cono]
-                    layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-            else:
-                
-                if  type(V[2]) == list:
-                    
-                    p_x = V[0][0]
-                    p_y = V[0][1]
-                    p_z = V[0][2]
-
-
-                    magni = V[1]
-
-                    dir_x = V[2][0]
-                    dir_y = V[2][1]
-                    dir_z = V[2][2]
-
-                    v = [magni *dir_x+p_x ,magni*dir_y+p_y,magni*dir_z+p_z]
-
-                    x.append(p_x)
-                    y.append(p_y)
-                    z.append(p_z)
-
-
-                    x.append(v[0])
-                    y.append(v[1])
-                    z.append(v[2])
-
-                    nombre = "Tail"+ "=" + "(" + str(V[0][0])  + "," + str(V[0][1]) +"," +str(V[0][2]) + ")" + "\n" + "Head"+ "=" + "(" + str(v[0])  + "," + str(v[1]) +"," +str(v[2]) + ")"
-
-                    color = randomRgbaColor()
-                    vector = go.Scatter3d( 
-                    x = [p_x,v[0]],
-                    y = [p_y,v[1]],
-                    z = [p_z,v[2]],
-                    hoverinfo = "name + text",
-                    hovertext = nombre,
-                    marker = dict( size = 1,color= color),
-                    line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                    
-                    paleta = [[0, color],[1, color]]
-
-                    cono = go.Cone(x=[v[0]-0.063*(v[0]-p_x)], y=[v[1]-0.063*(v[1]-p_y)], z=[v[2]-0.063*(v[2]-p_z)], u=[0.5*(v[0]-p_x)], v=[0.5*(v[1]-p_y)], w=[0.5*(v[2]-p_z)],sizemode="absolute",sizeref=escala,anchor="cm",
-                        showscale=False,
-                        colorscale=paleta,
-                        hoverinfo = "skip",
-                        colorbar=dict(thickness=20, ticklen=4),
-                        name="vector "+ str(args.index(V)+1))
-                    
-                    data += [vector,cono]
-                    layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-                if  type(V[2]) != list and  type(V[2]) != tuple:
-                    
-                    p_x = V[0][0]
-                    p_y = V[0][1]
-                    p_z = V[0][2]
-
-
-                    magni = V[1]
-
-                    dir_x = np.array(V[2]).astype(np.float64)[0][0]
-                    dir_y = np.array(V[2]).astype(np.float64)[1][0]
-                    dir_z = np.array(V[2]).astype(np.float64)[2][0]
-
-                    v = [magni *dir_x+p_x ,magni*dir_y+p_y,magni*dir_z+p_z]
-
-                    x.append(p_x)
-                    y.append(p_y)
-                    z.append(p_z)
-
-
-                    x.append(v[0])
-                    y.append(v[1])
-                    z.append(v[2])
-
-                    nombre = "Tail"+ "=" + "(" + str(V[0][0])  + "," + str(V[0][1]) +"," +str(V[0][2]) + ")" + "\n" + "Head"+ "=" + "(" + str(v[0])  + "," + str(v[1]) +"," +str(v[2]) + ")"
-
-                    color = randomRgbaColor()
-                    vector = go.Scatter3d( 
-                    x = [p_x,v[0]],
-                    y = [p_y,v[1]],
-                    z = [p_z,v[2]],
-                    hoverinfo = "name + text",
-                    hovertext = nombre,
-                    marker = dict( size = 1,color= color),
-                    line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-                    
-                    paleta = [[0, color],[1, color]]
-
-                    cono = go.Cone(x=[v[0]-0.063*(v[0]-p_x)], y=[v[1]-0.063*(v[1]-p_y)], z=[v[2]-0.063*(v[2]-p_z)], u=[0.5*(v[0]-p_x)], v=[0.5*(v[1]-p_y)], w=[0.5*(v[2]-p_z)],sizemode="absolute",sizeref=escala,anchor="cm",
-                        showscale=False,
-                        colorscale=paleta,
-                        hoverinfo = "skip",
-                        colorbar=dict(thickness=20, ticklen=4),
-                        name="vector "+ str(args.index(V)+1))
-                    
-                    data += [vector,cono]
-                    layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-
-
-        if type(V) != list:
-
-            a = np.array(V).astype(np.float64).tolist()[0][0]
-            b = np.array(V).astype(np.float64).tolist()[1][0]
-            c = np.array(V).astype(np.float64).tolist()[2][0]
-
-            x.append(a)
-            y.append(b)
-            z.append(c)
-
-            color = randomRgbaColor()
-            vector = go.Scatter3d( 
-            x = [0,a],
-            y = [0,b],
-            z = [0,c],
-            marker = dict( size = 1,color= color),
-            line = dict( color= color, width = 7),name="vector "+ str(args.index(V)+1))
-        
-            paleta = [[0, color],[1, color]]
-
-            cono = go.Cone(x=[a], y=[b], z=[c], u=[a], v=[b], w=[c],sizemode="absolute",sizeref=escala,anchor="cm",
-               showscale=False,
-               colorscale=paleta,
-               colorbar=dict(thickness=20, ticklen=4),
-               name="vector "+ str(args.index(V)+1))
-        
-            data += [vector,cono]
-            layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
-
-
-
+        data += [vector,cono]
+        layout = go.Layout(margin = dict( l = 0,r = 0,b = 0,t = 0))
 
     paleta2 = [[0, "#2a3f5f"],[1, "#2a3f5f"]]
     point = go.Scatter3d( x = [0],y = [0],z = [0], mode='markers',marker=dict(color= "#2a3f5f",size=5),showlegend=True,name="origen")
@@ -855,7 +496,6 @@ def plotvectors3D(*args):
         hoverinfo = "skip",
         marker = dict( size = 1,color= "#2a3f5f"),
         line = dict( color= "#2a3f5f", width = 3), showlegend=False,name="")
-    
     
     conox = go.Cone(x=[max(x)+escala], y=[0], z=[0], u=[max(x)+escala], v=[0], w=[0],sizemode="absolute",sizeref= escala*0.6,anchor="cm",
                showscale=False,
@@ -894,13 +534,10 @@ def plotvectors3D(*args):
                name="Eje z-positivo")
     
     
-    #plano = go.Surface(x = np.linspace(min(x),max(x),500), y = np.linspace(min(y),max(y),500) ,z = np.zeros(500),showscale=False)
-
     fig = go.Figure(data= data + [point, axex, conox, axey, conoy, axez, conoz] ,layout=layout)
 
 
     fig.update_layout(legend=dict(orientation="h",y=1.3,x=0.03),title_font=dict(size=50, color='rgb(1,21,51)'),showlegend=True,width=480, height=480)
-
 
     plot(fig,image_height=800,image_width=800)
     fig.show()
